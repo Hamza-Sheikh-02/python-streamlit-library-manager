@@ -1,6 +1,6 @@
 [project]
-name = "library-manager"
-version = "1.1.0"
+name = "python-streamlit-library-manager"
+version = "1.2.0"
 description = "A library manager app"
 readme = "README.md"
 requires-python = ">=3.13"
