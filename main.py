@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 import psycopg2
 
-# --- Database Connection Setup ---
+# --- Load Environment Variables & Setup Database Connection ---
 load_dotenv()
 DB_URL = os.getenv("DATABASE_URL")
 if not DB_URL:
@@ -20,7 +20,7 @@ except psycopg2.Error as e:
     st.error(f"Error connecting to the database: {e}")
     st.stop()
 
-# Create the "books" table if it doesn't exist
+# --- Create Books Table if It Doesn't Exist ---
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS books (
         id SERIAL PRIMARY KEY,
@@ -33,7 +33,7 @@ cursor.execute("""
 """)
 conn.commit()
 
-# --- Streamlit UI Configuration & Styling ---
+# --- Streamlit UI Configuration & Custom Styling ---
 st.set_page_config(page_title="Personal Library Manager",
                    page_icon="📚", layout="wide")
 st.markdown("""
@@ -49,13 +49,12 @@ st.markdown("""
     <p class="subtitle">By Hamza Sheikh</p>
     """, unsafe_allow_html=True)
 
-# --- Sidebar Navigation ---
-st.sidebar.title("📖 Library Navigation")
-page = st.sidebar.radio("Go to:", [
-                        "📚 Add Book", "📂 View Library", "🔍 Search Book", "📊 Library Statistics"])
+# --- Navigation Tabs Setup ---
+tab1, tab2, tab3, tab4 = st.tabs(
+    ["📚 Add Book", "📂 View Library", "🔍 Search Book", "📊 Library Statistics"])
 
-# --- Add Book Section ---
-if page == "📚 Add Book":
+# --- Tab 1: Add Book Section ---
+with tab1:
     st.subheader("📖 Add a New Book")
     col1, col2 = st.columns(2)
     with col1:
@@ -83,8 +82,8 @@ if page == "📚 Add Book":
         else:
             st.error("❌ Please enter both the title and the author's name.")
 
-# --- View Library Section ---
-elif page == "📂 View Library":
+# --- Tab 2: View Library Section ---
+with tab2:
     st.subheader("📚 Your Book Collection")
     try:
         cursor.execute("SELECT * FROM books")
@@ -108,8 +107,8 @@ elif page == "📂 View Library":
     except psycopg2.Error as e:
         st.error(f"❌ Error fetching books: {e}")
 
-# --- Search Book Section ---
-elif page == "🔍 Search Book":
+# --- Tab 3: Search Book Section ---
+with tab3:
     st.subheader("🔍 Search for a Book")
     search_query = st.text_input("Enter a book title or author name")
     if st.button("Search"):
@@ -131,8 +130,8 @@ elif page == "🔍 Search Book":
         else:
             st.error("Please enter a search query.")
 
-# --- Library Statistics Section ---
-elif page == "📊 Library Statistics":
+# --- Tab 4: Library Statistics Section ---
+with tab4:
     st.subheader("📊 Library Statistics")
     try:
         cursor.execute("SELECT COUNT(*) FROM books")
