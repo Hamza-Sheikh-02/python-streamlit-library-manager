@@ -1,9 +1,17 @@
-import streamlit as st
+"""Personal Library Manager Application.
+
+This application uses Streamlit for the UI and PostgreSQL for managing
+a personal library. It allows users to add, view, search, and export their
+book collection.
+"""
+
 from datetime import date
-import numpy as np
 import json
-from dotenv import load_dotenv
 import os
+
+import streamlit as st
+import numpy as np
+from dotenv import load_dotenv
 import psycopg2
 
 # --- Load Environment Variables & Setup Database Connection ---
@@ -39,8 +47,17 @@ st.set_page_config(page_title="Personal Library Manager",
 st.markdown("""
     <style>
         #MainMenu, footer {visibility: hidden;}
-        .main-title { font-size: 36px; font-weight: bold; color: #2E86C1; text-align: center; }
-        .subtitle { font-size: 18px; color: #555; text-align: center; }
+        .main-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2E86C1;
+            text-align: center;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: #555;
+            text-align: center;
+        }
         .stButton>button { width: 100%; }
     </style>
     """, unsafe_allow_html=True)
@@ -62,17 +79,38 @@ with tab1:
         author = st.text_input("Author Name")
     with col2:
         publication_year = st.number_input(
-            "Publication Year", min_value=1000, max_value=2100, step=1, value=date.today().year)
-        genre = st.selectbox("Genre", ["Fiction", "Non-fiction", "Mystery",
-                             "Romance", "Fantasy", "Science Fiction", "Horror", "History", "Other"])
-    read_status = st.radio("Reading Status", [
-                           "Not Read", "Currently Reading", "Finished"], horizontal=True)
+            "Publication Year",
+            min_value=1000,
+            max_value=2100,
+            step=1,
+            value=date.today().year
+        )
+        genre = st.selectbox(
+            "Genre",
+            [
+                "Fiction",
+                "Non-fiction",
+                "Mystery",
+                "Romance",
+                "Fantasy",
+                "Science Fiction",
+                "Horror",
+                "History",
+                "Other",
+            ],
+        )
+    read_status = st.radio(
+        "Reading Status",
+        ["Not Read", "Currently Reading", "Finished"],
+        horizontal=True,
+    )
 
     if st.button("📥 Add Book"):
         if title and author:
             try:
                 cursor.execute(
-                    "INSERT INTO books (title, author, year, genre, status) VALUES (%s, %s, %s, %s, %s)",
+                    "INSERT INTO books (title, author, year, genre, status) "
+                    "VALUES (%s, %s, %s, %s, %s)",
                     (title, author, publication_year, genre, read_status)
                 )
                 conn.commit()
@@ -114,15 +152,21 @@ with tab3:
     if st.button("Search"):
         if search_query:
             try:
-                query = "SELECT * FROM books WHERE title ILIKE %s OR author ILIKE %s"
+                query = (
+                    "SELECT * FROM books "
+                    "WHERE title ILIKE %s OR author ILIKE %s"
+                )
                 cursor.execute(
                     query, (f"%{search_query}%", f"%{search_query}%"))
                 results = cursor.fetchall()
                 if results:
                     for book in results:
                         book_id, title, author, year, genre, status = book
-                        st.write(
-                            f"📖 **{title}** by {author} ({year}) - {genre} | *{status}*")
+                        book_info = (
+                            f"📖 **{title}** by {author} "
+                            f"({year}) - {genre} | *{status}*"
+                        )
+                        st.write(book_info)
                 else:
                     st.warning("No matching books found.")
             except psycopg2.Error as e:
@@ -150,13 +194,16 @@ with tab4:
             st.metric(label="📖 Books Read", value=read_books)
         with col3:
             st.metric(label="📊 Percentage Read", value=f"{read_percentage}%")
-
         st.markdown(
-            "<h4 style='margin-top: 20px;'>📈 Reading Progress</h4>", unsafe_allow_html=True)
+            "<h4 style='margin-top: 20px;'>📈 Reading Progress</h4>",
+            unsafe_allow_html=True
+        )
         st.progress(read_percentage / 100)
 
         if read_percentage == 0:
-            st.warning("📌 You haven't read any books yet! Start reading today!")
+            st.warning(
+                "📌 You haven't read any books yet! Start reading today!"
+            )
         elif read_percentage < 50:
             st.info("📖 Keep going! You're making progress.")
         elif read_percentage < 100:
@@ -164,9 +211,10 @@ with tab4:
         else:
             st.balloons()
             st.success("🎉 Congratulations! You've read all your books!")
-
         st.markdown(
-            "<h4 style='margin-top: 30px;'>📤 Export Library</h4>", unsafe_allow_html=True)
+            "<h4 style='margin-top: 30px;'>📤 Export Library</h4>",
+            unsafe_allow_html=True
+        )
         if total_books > 0:
             cursor.execute("SELECT * FROM books")
             books = cursor.fetchall()
